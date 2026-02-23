@@ -36,7 +36,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
     /// </summary>
     [ExportMetadata("Name", "Humidity Switch Control")]
     [ExportMetadata("Description", "This trigger will turn on and off a switch type based on the humidity")]
-    [ExportMetadata("Icon", "Plugin_Test_SVG")]
+    [ExportMetadata("Icon", "ButtonSVG")]
     [ExportMetadata("Category", "Switch")]
     [Export(typeof(ISequenceTrigger))]
     [JsonObject(MemberSerialization.OptIn)]
@@ -89,6 +89,8 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         private double currentHumidityValue = 0.0;
         private int humidityThreshold = 50;
         private bool isSwitchOn;
+        private double? lastCommandedSwitchValue;
+        private short? lastCommandedSwitchIndex;
 
         [ImportingConstructor]
         public HumiditySwitchControlTrigger(IWeatherDataMediator weather, ISwitchMediator switches) {
@@ -124,7 +126,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         public double Value {
             get => value;
             set {
-                var clampedValue = Math.Max(0, Math.Min(100, Math.Round(value / 5.0) * 5));
+                var clampedValue = Math.Max(0, Math.Min(100, value));
                 if (Math.Abs(this.value - clampedValue) > double.Epsilon) {
                     this.value = clampedValue;
                     RaisePropertyChanged();
@@ -183,18 +185,16 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="token"></param>
         /// <returns></returns>
         public override Task Execute(ISequenceContainer context, IProgress<ApplicationStatus> progress, CancellationToken token) {
-            
             var switchOn = currentHumidityValue >= HumidityThreshold;
+            var requestedSwitchValue = switchOn ? Value : 0.0;
 
             if (switchMediator != null) {
-                if (switchOn) {
-                    switchMediator.SetSwitchValue(switchIndex, Value, progress, token);
-                    IsSwitchOn = true;
-                } else {
-                    switchMediator.SetSwitchValue(switchIndex, 0.0, progress, token);
-                    IsSwitchOn = false;
-                }
+                switchMediator.SetSwitchValue(switchIndex, requestedSwitchValue, progress, token);
+                IsSwitchOn = switchOn;
+                lastCommandedSwitchValue = requestedSwitchValue;
+                lastCommandedSwitchIndex = switchIndex;
             }
+
             return Task.CompletedTask;
         }
 
@@ -209,13 +209,18 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="nextItem"></param>
         /// <returns></returns>
         public override bool ShouldTrigger(ISequenceItem previousItem, ISequenceItem nextItem) {
-            if (!IsSwitchOn && currentHumidityValue >= HumidityThreshold) {
-                return true;
-            } else if (IsSwitchOn && currentHumidityValue < HumidityThreshold) {
+            var switchOn = currentHumidityValue >= HumidityThreshold;
+            var requestedSwitchValue = switchOn ? Value : 0.0;
+
+            if (!lastCommandedSwitchValue.HasValue || !lastCommandedSwitchIndex.HasValue) {
                 return true;
             }
 
-            return false;
+            if (lastCommandedSwitchIndex.Value != switchIndex) {
+                return true;
+            }
+
+            return Math.Abs(lastCommandedSwitchValue.Value - requestedSwitchValue) > double.Epsilon;
         }
         public IList<string> Issues => issues;
 
