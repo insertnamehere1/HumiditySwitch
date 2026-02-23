@@ -17,6 +17,13 @@
         <nina:SequenceBlockView DataContext="{Binding}">
             <nina:SequenceBlockView.SequenceItemContent>
                 <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="Humidity" />
+                    <TextBox
+                        Width="50"
+                        Margin="5,0,0,0"
+                        VerticalContentAlignment="Center"
+                        Text="{Binding HumidityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Margin="4,0,10,0" VerticalAlignment="Center" Text="%" />
                     <TextBlock VerticalAlignment="Center" Text="Switch" />
                     <ComboBox
                         Margin="5,0,0,0"
@@ -25,11 +32,37 @@
                         SelectedItem="{Binding SelectedSwitch}"
                         SelectedValuePath="Name" />
                     <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="Value" />
-                    <TextBox
-                        Width="80"
+                    <Button
+                        Width="24"
+                        Height="24"
                         Margin="5,0,0,0"
-                        VerticalAlignment="Center"
+                        Command="{Binding DecreaseValueCommand}"
+                        Content="-" />
+                    <TextBox
+                        Width="50"
+                        Margin="5,0,0,0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
                         Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button
+                        Width="24"
+                        Height="24"
+                        Margin="5,0,0,0"
+                        Command="{Binding IncreaseValueCommand}"
+                        Content="+" />
+                    <TextBlock Margin="15,0,5,0" VerticalAlignment="Center" Text="Indicator" />
+                    <Ellipse Width="16" Height="16" Stroke="Black" StrokeThickness="1">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Transparent" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSwitchOn}" Value="True">
+                                        <Setter Property="Fill" Value="LimeGreen" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
                 </StackPanel>
             </nina:SequenceBlockView.SequenceItemContent>
         </nina:SequenceBlockView>

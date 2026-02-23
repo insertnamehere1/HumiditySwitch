@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory {
     /// <summary>
@@ -84,6 +85,8 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         private IWritableSwitch selectedSwitch;
 
         private double currentHumidityValue = 0.0;
+        private int humidityThreshold = 50;
+        private bool isSwitchOn;
 
         [ImportingConstructor]
         public HumiditySwitchControlTrigger(IWeatherDataMediator weather, ISwitchMediator switches) {
@@ -92,6 +95,19 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
 
             WritableSwitches = new ReadOnlyCollection<IWritableSwitch>(CreateDummyList());
             SelectedSwitch = WritableSwitches.First();
+            Value = 0;
+
+            IncreaseValueCommand = new DelegateCommand(() => {
+                if (Value <= 95) {
+                    Value += 5;
+                }
+            });
+
+            DecreaseValueCommand = new DelegateCommand(() => {
+                if (Value >= 5) {
+                    Value -= 5;
+                }
+            });
         }
 
         private HumiditySwitchControlTrigger(HumiditySwitchControlTrigger cloneMe) : this(cloneMe.weatherDataMediator, cloneMe.switchMediator) {
@@ -103,7 +119,47 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         }
 
         [JsonProperty]
-        public double Value { get; set; }
+        public double Value {
+            get => value;
+            set {
+                var clampedValue = Math.Max(0, Math.Min(100, Math.Round(value / 5.0) * 5));
+                if (Math.Abs(this.value - clampedValue) > double.Epsilon) {
+                    this.value = clampedValue;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private double value;
+
+        [JsonProperty]
+        public int HumidityThreshold {
+            get => humidityThreshold;
+            set {
+                var clampedValue = Math.Max(0, Math.Min(100, value));
+                if (humidityThreshold != clampedValue) {
+                    humidityThreshold = clampedValue;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [JsonIgnore]
+        public bool IsSwitchOn {
+            get => isSwitchOn;
+            private set {
+                if (isSwitchOn != value) {
+                    isSwitchOn = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [JsonIgnore]
+        public ICommand IncreaseValueCommand { get; }
+
+        [JsonIgnore]
+        public ICommand DecreaseValueCommand { get; }
 
         public override object Clone() {
             return new HumiditySwitchControlTrigger(weatherDataMediator, switchMediator) {
@@ -112,7 +168,8 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                 Category = Category,
                 Description = Description,
                 SwitchIndex = SwitchIndex,
-                Value = Value
+                Value = Value,
+                HumidityThreshold = HumidityThreshold
             };
         }
 
@@ -139,7 +196,8 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="nextItem"></param>
         /// <returns></returns>
         public override bool ShouldTrigger(ISequenceItem previousItem, ISequenceItem nextItem) {
-            return true;
+            IsSwitchOn = currentHumidityValue > HumidityThreshold;
+            return IsSwitchOn;
         }
 
         public IList<string> Issues => issues;
@@ -163,6 +221,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                     issues.Add("No Humidity Data");
                 } else {
                     currentHumidityValue = weatherInfo.Humidity;
+                    IsSwitchOn = currentHumidityValue > HumidityThreshold;
                 }
             }
 
@@ -256,5 +315,26 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         }
 
 
+    }
+
+    internal sealed class DelegateCommand : ICommand {
+        private readonly Action execute;
+
+        public DelegateCommand(Action executeAction) {
+            execute = executeAction;
+        }
+
+        public event EventHandler CanExecuteChanged {
+            add { }
+            remove { }
+        }
+
+        public bool CanExecute(object parameter) {
+            return true;
+        }
+
+        public void Execute(object parameter) {
+            execute();
+        }
     }
 }
