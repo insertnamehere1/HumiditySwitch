@@ -28,7 +28,7 @@
                             Width="25"
                             Margin="5,0,0,0"
                             VerticalContentAlignment="Center"
-                            Text="{Binding HumidityThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                            Text="{Binding HumidityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Margin="4,0,10,0" VerticalAlignment="Center" Text="%" />
                         <TextBlock VerticalAlignment="Center" Text="Switch" />
                         <ComboBox
@@ -42,23 +42,23 @@
                             Width="24"
                             Height="24"
                             Margin="5,0,0,0"
-                            Command="{Binding DecreaseValueCommand}">
-                            <TextBlock Foreground="White" Text="-" />
-                        </Button>
+                            Command="{Binding DecreaseValueCommand}"
+                            Content="-"
+                            Foreground="White" />
                         <TextBox
                             Width="25"
                             Margin="5,0,0,0"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
                             IsReadOnly="False"
-                            Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                            Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <Button
                             Width="24"
                             Height="24"
                             Margin="5,0,0,0"
-                            Command="{Binding IncreaseValueCommand}">
-                            <TextBlock Foreground="White" Text="+" />
-                        </Button>
+                            Command="{Binding IncreaseValueCommand}"
+                            Content="+"
+                            Foreground="White" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
