@@ -102,6 +102,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
             clone.SwitchIndex = SwitchIndex;
         }
 
+        [JsonProperty]
         public double Value { get; set; }
 
         public override object Clone() {
@@ -109,7 +110,9 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                 Icon = Icon,
                 Name = Name,
                 Category = Category,
-                Description = Description
+                Description = Description,
+                SwitchIndex = SwitchIndex,
+                Value = Value
             };
         }
 
@@ -201,7 +204,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                 issues.Add(string.Format("No Switch Selected"));
             } else {
                 if (Value < s.Minimum || Value > s.Maximum)
-                    issues.Add(string.Format("Invalid Switch Value", s.Minimum, s.Maximum, s.StepSize));
+                    issues.Add(string.Format("Invalid Switch Value. Expected range {0} to {1} with step {2}.", s.Minimum, s.Maximum, s.StepSize));
             }
 
             bool changed = !issues.SequenceEqual(lastIssuesSnapshot);
