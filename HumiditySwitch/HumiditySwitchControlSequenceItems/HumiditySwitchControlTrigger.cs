@@ -209,9 +209,14 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="nextItem"></param>
         /// <returns></returns>
         public override bool ShouldTrigger(ISequenceItem previousItem, ISequenceItem nextItem) {
-            return true;
-        }
+            if (!IsSwitchOn && currentHumidityValue >= HumidityThreshold) {
+                return true;
+            } else if (IsSwitchOn && currentHumidityValue < HumidityThreshold) {
+                return true;
+            }
 
+            return false;
+        }
         public IList<string> Issues => issues;
 
         /// <summary>
