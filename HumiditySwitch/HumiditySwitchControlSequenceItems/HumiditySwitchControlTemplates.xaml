@@ -24,16 +24,12 @@
                         ItemsSource="{Binding WritableSwitches}"
                         SelectedItem="{Binding SelectedSwitch}"
                         SelectedValuePath="Name" />
- <!--                   <logic:ExprStepperControl
-                        MinWidth="100"
-                        HorizontalAlignment="Stretch"
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="Value" />
+                    <TextBox
+                        Width="80"
+                        Margin="5,0,0,0"
                         VerticalAlignment="Center"
-                        Exp="{Binding ValueExpression}"
-                        Label="Value"
-                        Max="{Binding SelectedSwitch.Maximum}"
-                        Min="{Binding SelectedSwitch.Minimum}"
-                        Step="{Binding SelectedSwitch.StepSize}" />
- -->
+                        Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
             </nina:SequenceBlockView.SequenceItemContent>
         </nina:SequenceBlockView>
