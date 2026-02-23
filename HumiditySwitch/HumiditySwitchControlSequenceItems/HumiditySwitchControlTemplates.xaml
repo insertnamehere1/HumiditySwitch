@@ -50,7 +50,7 @@
                         Margin="5,0,0,0"
                         Command="{Binding IncreaseValueCommand}"
                         Content="+" />
-                    <TextBlock Margin="15,0,5,0" VerticalAlignment="Center" Text="Indicator" />
+                    <TextBlock Margin="100,0,5,0" VerticalAlignment="Center" Text="Indicator" />
                     <Ellipse Width="16" Height="16" Stroke="Black" StrokeThickness="1">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
@@ -58,6 +58,9 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsSwitchOn}" Value="True">
                                         <Setter Property="Fill" Value="LimeGreen" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSwitchOn}" Value="False">
+                                        <Setter Property="Fill" Value="Transparent" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

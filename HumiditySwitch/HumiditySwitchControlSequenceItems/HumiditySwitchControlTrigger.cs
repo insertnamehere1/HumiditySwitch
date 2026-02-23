@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Utility.Notification;
@@ -14,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -181,7 +183,18 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="token"></param>
         /// <returns></returns>
         public override Task Execute(ISequenceContainer context, IProgress<ApplicationStatus> progress, CancellationToken token) {
-            Notification.ShowSuccess("Trigger was fired");
+            
+            var switchOn = currentHumidityValue >= HumidityThreshold;
+
+            if (switchMediator != null) {
+                if (switchOn) {
+                    switchMediator.SetSwitchValue(switchIndex, Value, progress, token);
+                    IsSwitchOn = true;
+                } else {
+                    switchMediator.SetSwitchValue(switchIndex, 0.0, progress, token);
+                    IsSwitchOn = false;
+                }
+            }
             return Task.CompletedTask;
         }
 
@@ -196,8 +209,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="nextItem"></param>
         /// <returns></returns>
         public override bool ShouldTrigger(ISequenceItem previousItem, ISequenceItem nextItem) {
-            IsSwitchOn = currentHumidityValue > HumidityThreshold;
-            return IsSwitchOn;
+            return true;
         }
 
         public IList<string> Issues => issues;
@@ -221,7 +233,6 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                     issues.Add("No Humidity Data");
                 } else {
                     currentHumidityValue = weatherInfo.Humidity;
-                    IsSwitchOn = currentHumidityValue > HumidityThreshold;
                 }
             }
 
@@ -262,7 +273,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
             if (s == null) {
                 issues.Add(string.Format("No Switch Selected"));
             } else {
-                if (Value < s.Minimum || Value > s.Maximum)
+                if (Value < s.Minimum || Value > s.Maximum * 100)
                     issues.Add(string.Format("Invalid Switch Value. Expected range {0} to {1} with step {2}.", s.Minimum, s.Maximum, s.StepSize));
             }
 
@@ -272,11 +283,9 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                 RaisePropertyChanged(nameof(Issues));
             }
 
-            return issues.Count == 0;
+             return issues.Count == 0;
         }
             
-
-
         public ReadOnlyCollection<IWritableSwitch> WritableSwitches {
             get => writableSwitches;
             set {
@@ -313,8 +322,6 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
                 RaisePropertyChanged();
             }
         }
-
-
     }
 
     internal sealed class DelegateCommand : ICommand {
