@@ -36,7 +36,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
     /// </summary>
     [ExportMetadata("Name", "Humidity Switch Control")]
     [ExportMetadata("Description", "This trigger will turn on and off a switch type based on the humidity")]
-    [ExportMetadata("Icon", "Plugin_Test_SVG")]
+    [ExportMetadata("Icon", "ButtonSVG")]
     [ExportMetadata("Category", "Switch")]
     [Export(typeof(ISequenceTrigger))]
     [JsonObject(MemberSerialization.OptIn)]
@@ -124,7 +124,7 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         public double Value {
             get => value;
             set {
-                var clampedValue = Math.Max(0, Math.Min(100, Math.Round(value / 5.0) * 5));
+                var clampedValue = Math.Max(0, Math.Min(100, value));
                 if (Math.Abs(this.value - clampedValue) > double.Epsilon) {
                     this.value = clampedValue;
                     RaisePropertyChanged();
