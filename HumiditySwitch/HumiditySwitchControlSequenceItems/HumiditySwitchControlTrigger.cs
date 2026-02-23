@@ -89,6 +89,8 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         private double currentHumidityValue = 0.0;
         private int humidityThreshold = 50;
         private bool isSwitchOn;
+        private double? lastCommandedSwitchValue;
+        private short? lastCommandedSwitchIndex;
 
         [ImportingConstructor]
         public HumiditySwitchControlTrigger(IWeatherDataMediator weather, ISwitchMediator switches) {
@@ -183,18 +185,16 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="token"></param>
         /// <returns></returns>
         public override Task Execute(ISequenceContainer context, IProgress<ApplicationStatus> progress, CancellationToken token) {
-            
             var switchOn = currentHumidityValue >= HumidityThreshold;
+            var requestedSwitchValue = switchOn ? Value : 0.0;
 
             if (switchMediator != null) {
-                if (switchOn) {
-                    switchMediator.SetSwitchValue(switchIndex, Value, progress, token);
-                    IsSwitchOn = true;
-                } else {
-                    switchMediator.SetSwitchValue(switchIndex, 0.0, progress, token);
-                    IsSwitchOn = false;
-                }
+                switchMediator.SetSwitchValue(switchIndex, requestedSwitchValue, progress, token);
+                IsSwitchOn = switchOn;
+                lastCommandedSwitchValue = requestedSwitchValue;
+                lastCommandedSwitchIndex = switchIndex;
             }
+
             return Task.CompletedTask;
         }
 
@@ -209,13 +209,18 @@ namespace ChrisDowd.NINA.HumiditySwitchControl.HumiditySwitchControlTestCategory
         /// <param name="nextItem"></param>
         /// <returns></returns>
         public override bool ShouldTrigger(ISequenceItem previousItem, ISequenceItem nextItem) {
-            if (!IsSwitchOn && currentHumidityValue >= HumidityThreshold) {
-                return true;
-            } else if (IsSwitchOn && currentHumidityValue < HumidityThreshold) {
+            var switchOn = currentHumidityValue >= HumidityThreshold;
+            var requestedSwitchValue = switchOn ? Value : 0.0;
+
+            if (!lastCommandedSwitchValue.HasValue || !lastCommandedSwitchIndex.HasValue) {
                 return true;
             }
 
-            return false;
+            if (lastCommandedSwitchIndex.Value != switchIndex) {
+                return true;
+            }
+
+            return Math.Abs(lastCommandedSwitchValue.Value - requestedSwitchValue) > double.Epsilon;
         }
         public IList<string> Issues => issues;
 
